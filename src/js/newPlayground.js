@@ -1,5 +1,7 @@
 var curr;
 var saved;
+var jsonData;
+var patNames = [];
 var kick = new Howl({
     src: ['808drum/808kick.wav'],
 });
@@ -30,6 +32,16 @@ $(document).ready(function() {
     $.getJSON('data.json').done(function(response) {
         console.log("Success");
         saved = response;
+
+        var links = [];
+        var dropDownOpts = $('.dropdown-content');
+        for (var i = 0; i < saved.length; i++) {
+            links.push('<a id=' + saved[i].nameID + '>' + saved[i].nameID + '</a>');
+            patNames.push(saved[i].nameID);
+        }
+        getDataJson(response)
+        $(dropDownOpts).append(links);
+
     }).fail(function() {
         console.log("Error");
     });
@@ -41,10 +53,17 @@ $(document).ready(function() {
     createRow(HHC);
     createRow(HHO);
 
-
+    function getDataJson(response) {
+        jsonData = response;
+    }
 
     $('#start').on('click', function() {
         startCounter();
+          $(this).attr("disabled",true);
+    });
+
+    $('#classic').on('click', function() {
+        console.log('classic')
     });
 
     $('#stop').on('click', function() {
@@ -55,6 +74,7 @@ $(document).ready(function() {
             }
         }
         clearTimeout(ticker);
+        $('#start').attr("disabled",false);
     });
 
     $('td').click(function() {
@@ -70,19 +90,18 @@ $(document).ready(function() {
 
     $('#save').on('click', function() {
         savePattern();
-    });
-
-    $('#load').on('click', function() {
-    	//saved = pattern chosen
-        loadPattern(saved);
+        alert('WIP - still to do')
     });
 
     $('#clear').on('click', function() {
-    	var allCells = $('td');
-    for(var i = 0; i<allCells.length; i++) {
-    	deslct(allCells[i]);
-    }
+clearPattern();
     })
+
+
+    $('a').on('click', function(e) {
+        e.preventDefault();
+        console.log('clicked a ')
+    });
 
 });
 
@@ -176,6 +195,12 @@ function deslct(curr) {
     curr.dataset.note = '0';
 };
 
+function clearPattern() {
+            var allCells = $('td');
+        for (var i = 0; i < allCells.length; i++) {
+            deslct(allCells[i]);
+        }
+}
 
 
 function savePattern() {
@@ -207,7 +232,7 @@ function savePattern() {
 
     var savedPattern = {
 
-        name: 'thename',
+        nameID: 'thename',
         kick: kickArr,
         snare: snareArr,
         hhc: hhcArr,
@@ -220,27 +245,64 @@ function savePattern() {
 
 
 function loadPattern(pattern) {
-	var kickRow = $('td.kick');
-	var snareRow = $('td.snare');
+    var kickRow = $('td.kick');
+    var snareRow = $('td.snare');
     var hhcRow = $('td.hhc');
     var hhoRow = $('td.hho');
-	var loaded_kicks = pattern.kick;
-	var loaded_snares = pattern.snare;
-	var loaded_hhc = pattern.hhc;
-	var loaded_hho = pattern.hho;
+    var loaded_kicks = pattern.kick;
+    var loaded_snares = pattern.snare;
+    var loaded_hhc = pattern.hhc;
+    var loaded_hho = pattern.hho;
 
-setLoadedNotes(kickRow, loaded_kicks);
-setLoadedNotes(snareRow, loaded_snares);
-setLoadedNotes(hhcRow, loaded_hhc);
-setLoadedNotes(hhoRow, loaded_hho);
-	
+    setLoadedNotes(kickRow, loaded_kicks);
+    setLoadedNotes(snareRow, loaded_snares);
+    setLoadedNotes(hhcRow, loaded_hhc);
+    setLoadedNotes(hhoRow, loaded_hho);
+
 
 }
 
 function setLoadedNotes(row, loadedType) {
-				for (var j = 0; j<row.length; j++) {
-		if(loadedType[j] == '1') {
-			slct(row[j]);
-		}
-	}
+    for (var j = 0; j < row.length; j++) {
+        if (loadedType[j] == '1') {
+            slct(row[j]);
+        }
+    }
+}
+
+
+
+/* When the user clicks on the button, 
+toggle between hiding and showing the dropdown content */
+function loadThePatterns() {
+    document.getElementById("load_dropdown").classList.toggle("show");
+}
+
+// Close the dropdown menu if the user clicks outside of it
+window.onclick = function(event) {
+    if (!event.target.matches('.dropbtn')) {
+
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        var i;
+        for (i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+    if (event.target.matches('a')) {
+
+        var selectedPattern = event.srcElement.id
+        console.log(patNames);
+        console.log(jsonData)
+
+        for(var i = 0; i<jsonData.length; i++) {
+            if(jsonData[i].nameID == selectedPattern) {
+                clearPattern()
+                loadPattern(jsonData[i]);
+            }
+        }
+
+    }
 }
